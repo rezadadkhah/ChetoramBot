@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(BotDbContext))]
-    [Migration("20200306115845_updateEntities")]
-    partial class updateEntities
+    [Migration("20200330100239_migration23")]
+    partial class migration23
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -27,11 +27,11 @@ namespace DataAccess.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("ConsideredId")
-                        .HasColumnType("int");
+                    b.Property<string>("EnglishTitle")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("VoterId")
-                        .HasColumnType("int");
+                    b.Property<string>("PersianTitle")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -63,6 +63,30 @@ namespace DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("User");
+                });
+
+            modelBuilder.Entity("DataAccess.Models.UserServey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("ConsideredUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Point")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ServeyId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VoterUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserServey");
                 });
 #pragma warning restore 612, 618
         }

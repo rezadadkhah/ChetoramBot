@@ -6,12 +6,14 @@ using System.Text;
 
 namespace DataAccess.Models
 {
-    public class Survey
+    public class UserServey
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public int VoterId { get; set; }
-        public int ConsideredId { get; set; }
+        public int VoterUserId { get; set; }
+        public int ConsideredUserId { get; set; }
+        public int ServeyId { get; set; }
+        public int Point { get; set; }
     }
 }

@@ -3,14 +3,16 @@ using DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(BotDbContext))]
-    partial class BotDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200330093114_migration22")]
+    partial class migration22
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -70,7 +72,7 @@ namespace DataAccess.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("ConsideredUserId")
+                    b.Property<int>("ConsideredId")
                         .HasColumnType("int");
 
                     b.Property<int>("Point")
@@ -79,7 +81,7 @@ namespace DataAccess.Migrations
                     b.Property<int>("ServeyId")
                         .HasColumnType("int");
 
-                    b.Property<int>("VoterUserId")
+                    b.Property<int>("VoterId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
