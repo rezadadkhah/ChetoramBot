@@ -81,6 +81,11 @@ namespace ChetoramBot
             }
         }
 
+        private static void GetNewServey(int userId)
+        {
+            throw new NotImplementedException();
+        }
+
         private static async Task GetPrivateLink(UpdateEventArgs e)
         {
             await botClient.SendTextMessageAsync(
