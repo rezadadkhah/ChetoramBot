@@ -19,87 +19,68 @@ namespace ChetoramBot
         private static TelegramBotClient botClient;
         public static void Run()
         {
+            int x = int.Parse("salam",null);
             botClient = new TelegramBotClient("1010447647:AAErBW8AbSk5y5V_XhQ2i1djhKB6dDT9Epo");
-
-            botClient.OnUpdate += OnUpdate;
+            botClient.OnCallbackQuery += OnCallbackQuery;
+            botClient.OnMessage += OnMessage;
             botClient.StartReceiving();
             Thread.Sleep(int.MaxValue);
         }
-
-        private static async void OnUpdate(object sender, UpdateEventArgs e)
+        private static async void OnCallbackQuery(object sender, CallbackQueryEventArgs e)
         {
-            var handler = e.Update.Type switch
-            {
-                UpdateType.Message => ProcessMessage(e),
-                UpdateType.CallbackQuery => ProcessCallbackQuery(e),
-                _ => UnknownUpdateHandlerAsync(e.Update)
-            };
-
-            try
-            {
-                await handler;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-
-        private static async Task ProcessCallbackQuery(UpdateEventArgs e)
-        {
-            string[] data = e.Update.CallbackQuery.Data.Split("-");
+            string[] data = e.CallbackQuery.Data.Split("-");
+            
             UserServey userServey = new UserServey()
             {
-                VoterUserId = Int32.Parse(data[0]),
-                ConsideredUserId = Int32.Parse(data[1]),
-                ServeyId = Int32.Parse(data[2]),
-                Point = Int32.Parse(data[3]),
+                VoterUserId = int.Parse(data[0],null),
+                ConsideredUserId = int.Parse(data[1],null),
+                ServeyId = int.Parse(data[2],null),
+                Point = int.Parse(data[3],null),
             };
             InsertUserServey insertUserServey = new InsertUserServey(userServey);
             insertUserServey.Run();
+
+            botClient.AnswerCallbackQueryAsync(e.CallbackQuery.Id);
+            botClient.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, e.CallbackQuery.Message.Text + " => " + data[4]);
         }
+        private static async void OnMessage(object sender, MessageEventArgs e)
+        {
+            if (e.Message.Type == MessageType.Text)
+                ProcessText(e);
+        }
+
 
         private static async Task UnknownUpdateHandlerAsync(Update update)
         {
             Console.WriteLine($"Unknown update type: {update.Type}");
         }
 
-        private static async Task ProcessMessage(UpdateEventArgs e)
-        {
-            var handler = e.Update.Message.Type switch
-            {
-                MessageType.Text => ProcessText(e),
-                _ => UnknownUpdateHandlerAsync(e.Update)
-            };
-            await handler;
 
-        }
-
-        private static async Task ProcessText(UpdateEventArgs e)
+        private static async Task ProcessText(MessageEventArgs e)
         {
-            if (e.Update.Message.Text == "/start")
+            if (e.Message.Text == "/start")
             {
                 StartClient(e);
                 return;
             }
-            if (e.Update.Message.Text == "لینک نظردهی ناشناس من")
+            if (e.Message.Text == "لینک نظردهی ناشناس من")
             {
                 GetPrivateLink(e);
                 return;
             }
-            if (e.Update.Message.Text.StartsWith("/start") &&
-                e.Update.Message.Text.Split(" ")[0] == "/start" &&
-                !e.Update.Message.Text.Split(" ")[1].IsNullOrEmptyOrWhitespace() &&
-                e.Update.Message.Text.Split(" ")[1].Split("-")[0] == "PL" &&
-                !e.Update.Message.Text.Split(" ")[1].Split("-")[1].IsNullOrEmptyOrWhitespace() &&
-                int.TryParse(e.Update.Message.Text.Split(" ")[1].Split("-")[1], out int userId))
+            if (e.Message.Text.StartsWith("/start") &&
+                e.Message.Text.Split(" ")[0] == "/start" &&
+                !e.Message.Text.Split(" ")[1].IsNullOrEmptyOrWhitespace() &&
+                e.Message.Text.Split(" ")[1].Split("-")[0] == "PL" &&
+                !e.Message.Text.Split(" ")[1].Split("-")[1].IsNullOrEmptyOrWhitespace() &&
+                int.TryParse(e.Message.Text.Split(" ")[1].Split("-")[1], out int userId))
             {
                 GetNewServey(e, userId);
                 return;
             }
         }
 
-        private static void GetNewServey(UpdateEventArgs e, int userId)
+        private static void GetNewServey(MessageEventArgs e, int userId)
         {
             GetServey getServey = new GetServey();
             getServey.Run();
@@ -108,38 +89,38 @@ namespace ChetoramBot
 
         }
 
-        private static void CreateAndSendServeyInlineKeyboard(UpdateEventArgs e, int userId, List<Survey> serveys)
+        private static void CreateAndSendServeyInlineKeyboard(MessageEventArgs e, int userId, List<Survey> serveys)
         {
             foreach (Survey survey in serveys)
             {
 
                 botClient.SendTextMessageAsync(
-                            chatId: e.Update.Message.Chat.Id,
+                            chatId: e.Message.Chat.Id,
                             text: survey.PersianTitle,
                             replyMarkup: new InlineKeyboardMarkup(new[]
                         {
-                            InlineKeyboardButton.WithCallbackData("نه اصلا",e.Update.Message.From.Id + "-" + userId + "-" + survey.Id + "-0"),
-                            InlineKeyboardButton.WithCallbackData("خیلی کم",e.Update.Message.From.Id + "-" + userId + "-" + survey.Id + "-25"),
-                            InlineKeyboardButton.WithCallbackData("متوسط",e.Update.Message.From.Id + "-" + userId + "-" + survey.Id + "-50"),
-                            InlineKeyboardButton.WithCallbackData("آره",e.Update.Message.From.Id + "-" + userId + "-" + survey.Id + "-75"),
-                            InlineKeyboardButton.WithCallbackData("آره خیلی",e.Update.Message.From.Id + "-" + userId + "-" + survey.Id + "-100")
+                            InlineKeyboardButton.WithCallbackData("نه اصلا",e.Message.From.Id + "-" + userId + "-" + survey.Id + "-0-نه اصلا"),
+                            InlineKeyboardButton.WithCallbackData("خیلی کم",e.Message.From.Id + "-" + userId + "-" + survey.Id + "-25-خیلی کم"),
+                            InlineKeyboardButton.WithCallbackData("متوسط",e.Message.From.Id + "-" + userId + "-" + survey.Id + "-50-متوسط"),
+                            InlineKeyboardButton.WithCallbackData("آره",e.Message.From.Id + "-" + userId + "-" + survey.Id + "-75-آره"),
+                            InlineKeyboardButton.WithCallbackData("صد درصد",e.Message.From.Id + "-" + userId + "-" + survey.Id + "-100-صد درصد")
                         })
                         ).ConfigureAwait(false);
 
             }
         }
 
-        private static async Task GetPrivateLink(UpdateEventArgs e)
+        private static async Task GetPrivateLink(MessageEventArgs e)
         {
             await botClient.SendTextMessageAsync(
-                            chatId: e.Update.Message.Chat.Id,
-                            text: Messages.BotURL + "PL-" + e.Update.Message.From.Id
+                            chatId: e.Message.Chat.Id,
+                            text: Messages.BotURL + "PL-" + e.Message.From.Id
                         ).ConfigureAwait(false);
         }
 
-        private static async Task StartClient(UpdateEventArgs e)
+        private static async Task StartClient(MessageEventArgs e)
         {
-            Telegram.Bot.Types.User user = e.Update.Message.From;
+            Telegram.Bot.Types.User user = e.Message.From;
             CreateUser CreateUser = new CreateUser(new DataAccess.Models.User
             {
                 UserId = user.Id,
@@ -148,7 +129,7 @@ namespace ChetoramBot
             });
             CreateUser.Run();
             await botClient.SendTextMessageAsync(
-                            chatId: e.Update.Message.Chat.Id,
+                            chatId: e.Message.Chat.Id,
                             text: Messages.StartClient,
                             replyMarkup: CreateMarkupKeyboardButtons()
                         ).ConfigureAwait(false);
