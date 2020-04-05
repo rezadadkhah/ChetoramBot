@@ -19,7 +19,6 @@ namespace ChetoramBot
         private static TelegramBotClient botClient;
         public static void Run()
         {
-            int x = int.Parse("salam",null);
             botClient = new TelegramBotClient("1010447647:AAErBW8AbSk5y5V_XhQ2i1djhKB6dDT9Epo");
             botClient.OnCallbackQuery += OnCallbackQuery;
             botClient.OnMessage += OnMessage;
@@ -29,13 +28,13 @@ namespace ChetoramBot
         private static async void OnCallbackQuery(object sender, CallbackQueryEventArgs e)
         {
             string[] data = e.CallbackQuery.Data.Split("-");
-            
             UserServey userServey = new UserServey()
             {
                 VoterUserId = int.Parse(data[0],null),
                 ConsideredUserId = int.Parse(data[1],null),
                 ServeyId = int.Parse(data[2],null),
                 Point = int.Parse(data[3],null),
+                SurveyDate = DateTime.Now
             };
             InsertUserServey insertUserServey = new InsertUserServey(userServey);
             insertUserServey.Run();
@@ -82,11 +81,37 @@ namespace ChetoramBot
 
         private static void GetNewServey(MessageEventArgs e, int userId)
         {
+            if(CheckSurveyPermission(e,userId) == false)
+            {
+                return;
+            }
             GetServey getServey = new GetServey();
             getServey.Run();
 
             CreateAndSendServeyInlineKeyboard(e, userId, getServey.Result);
 
+        }
+
+        private static bool CheckSurveyPermission(MessageEventArgs e, int userId)
+        {
+            if(e.Message.From.Id == userId)
+            {
+                botClient.SendTextMessageAsync(
+                            chatId: e.Message.Chat.Id,
+                            text: "شما نمیتونید به خودتون رای بدید  :)"
+                        ).ConfigureAwait(false);
+            }
+            CheckLastSurveyDate checkLastSurveyDate = new CheckLastSurveyDate(e.Message.From.Id,userId);
+            checkLastSurveyDate.Run();
+            if(checkLastSurveyDate.Result == false)
+            {
+                 botClient.SendTextMessageAsync(
+                            chatId: e.Message.Chat.Id,
+                            text: "باید از آخرین رای شما به این کاربر 24 ساعت بگذره بعد رای بدید :)"
+                        ).ConfigureAwait(false);
+                return false;
+            }
+            return true;
         }
 
         private static void CreateAndSendServeyInlineKeyboard(MessageEventArgs e, int userId, List<Survey> serveys)

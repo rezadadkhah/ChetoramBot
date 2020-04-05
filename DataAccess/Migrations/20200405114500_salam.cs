@@ -1,8 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace DataAccess.Migrations
 {
-    public partial class migration22 : Migration
+    public partial class salam : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -43,10 +44,11 @@ namespace DataAccess.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    VoterId = table.Column<int>(nullable: false),
-                    ConsideredId = table.Column<int>(nullable: false),
+                    VoterUserId = table.Column<int>(nullable: false),
+                    ConsideredUserId = table.Column<int>(nullable: false),
                     ServeyId = table.Column<int>(nullable: false),
-                    Point = table.Column<int>(nullable: false)
+                    Point = table.Column<int>(nullable: false),
+                    SurveyDate = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
