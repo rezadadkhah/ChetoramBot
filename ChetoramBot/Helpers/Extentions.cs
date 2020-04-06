@@ -21,5 +21,15 @@ namespace ChetoramBot.Helpers
         {
             return text == null || string.IsNullOrWhiteSpace(text);
         }
+
+        public static bool IsPrivateLink(this string text)
+        {
+            return text.StartsWith("/start") &&
+                text.Split(" ")[0] == "/start" &&
+                !string.IsNullOrEmpty(text.Split(" ")[1]) &&
+                text.Split(" ")[1].Split("-")[0] == "PL" &&
+                !string.IsNullOrEmpty(text.Split(" ")[1].Split("-")[1]) &&
+                int.TryParse(text.Split(" ")[1].Split("-")[1], out int userId);
+        }
     }
 }

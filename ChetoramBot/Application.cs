@@ -23,7 +23,7 @@ namespace ChetoramBot
             botClient.OnCallbackQuery += OnCallbackQuery;
             botClient.OnMessage += OnMessage;
             botClient.StartReceiving();
-            Thread.Sleep(int.MaxValue);
+            Console.ReadLine();
         }
         private static async void OnCallbackQuery(object sender, CallbackQueryEventArgs e)
         {
@@ -44,16 +44,14 @@ namespace ChetoramBot
         }
         private static async void OnMessage(object sender, MessageEventArgs e)
         {
+            await botClient.SendTextMessageAsync(
+                            chatId: e.Message.Chat.Id,
+                            text: Messages.StartClient,
+                            replyMarkup: CreateMarkupKeyboardButtons()
+                        ).ConfigureAwait(false);
             if (e.Message.Type == MessageType.Text)
                 ProcessText(e);
         }
-
-
-        private static async Task UnknownUpdateHandlerAsync(Update update)
-        {
-            Console.WriteLine($"Unknown update type: {update.Type}");
-        }
-
 
         private static async Task ProcessText(MessageEventArgs e)
         {
@@ -100,6 +98,7 @@ namespace ChetoramBot
                             chatId: e.Message.Chat.Id,
                             text: "شما نمیتونید به خودتون رای بدید  :)"
                         ).ConfigureAwait(false);
+                return false;
             }
             CheckLastSurveyDate checkLastSurveyDate = new CheckLastSurveyDate(e.Message.From.Id,userId);
             checkLastSurveyDate.Run();
@@ -167,11 +166,11 @@ namespace ChetoramBot
                     {
                         new[]
                         {
-                            new KeyboardButton("لینک نظردهی ناشناس من")
+                            new KeyboardButton(":)" + ":-)")
                         },
                         new[]
                         {
-                            KeyboardButton.WithRequestContact("نظر بقیه راجع بهم چی بوده؟")
+                            KeyboardButton.WithRequestContact(":D" + ":-D")
                         }
                     }
             );
