@@ -15,5 +15,6 @@ namespace DataAccess.Models
         public int ConsideredUserId { get; set; }
         public int SurveyId { get; set; }
         public int Point { get; set; }
+        public DateTime SurveyDate { get; set; }
     }
 }

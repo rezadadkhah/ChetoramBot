@@ -66,7 +66,7 @@ namespace ChetoramBot
             }
         }
 
-        private static void SendNewSurvey(MessageEventArgs e, int userId)
+        private static async Task GetPrivateLink(UpdateEventArgs e)
         {
             GetSurvey getSurvey = new GetSurvey();
             getSurvey.Run();
