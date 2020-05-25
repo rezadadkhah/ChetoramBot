@@ -13,9 +13,11 @@ namespace Business.Common.Extentions
 
         public static bool IsNotPositive(this int number)
         {
-            if (number > 0)
-                return false;
-            return true;
+            return number <= 0;
+        }
+        public static bool IsPositive(this int number)
+        {
+            return number > 0;
         }
         public static bool IsNullOrEmptyOrWhitespace(this string number)
         {

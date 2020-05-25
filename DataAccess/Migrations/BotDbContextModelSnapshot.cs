@@ -63,7 +63,7 @@ namespace DataAccess.Migrations
                     b.ToTable("User");
                 });
 
-            modelBuilder.Entity("DataAccess.Models.UserServey", b =>
+            modelBuilder.Entity("DataAccess.Models.UserSurvey", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -76,7 +76,7 @@ namespace DataAccess.Migrations
                     b.Property<int>("Point")
                         .HasColumnType("int");
 
-                    b.Property<int>("ServeyId")
+                    b.Property<int>("SurveyId")
                         .HasColumnType("int");
 
                     b.Property<int>("VoterUserId")
@@ -84,7 +84,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserServey");
+                    b.ToTable("UserSurvey");
                 });
 #pragma warning restore 612, 618
         }

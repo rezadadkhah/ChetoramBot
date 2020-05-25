@@ -5,17 +5,17 @@ using System.Linq;
 
 namespace Business.Business.User
 {
-    public class InsertUserServey : BusinessBase<bool>
+    public class InsertUserSurvey : BusinessBase<bool>
     {
-        private readonly UserServey userServey;
+        private readonly UserSurvey userSurvey;
 
-        public InsertUserServey(UserServey userServey)
+        public InsertUserSurvey(UserSurvey userSurvey)
         {
-            this.userServey = userServey;
+            this.userSurvey = userSurvey;
         }
         public override void Validate()
         {
-            if (userServey == null)
+            if (userSurvey == null)
             {
                 ReturnInvalidResult(Types.ExceptionTypes.ValidationException);
                 Continue = false;
@@ -23,7 +23,7 @@ namespace Business.Business.User
         }
         public override void Execute()
         {
-            Context.UserServey.Add(userServey);
+            Context.UserSurvey.Add(userSurvey);
             Context.SaveChanges();
             Result = true;
             return;

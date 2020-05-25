@@ -2,7 +2,7 @@
 
 namespace DataAccess.Migrations
 {
-    public partial class migration22 : Migration
+    public partial class mig1 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -38,19 +38,19 @@ namespace DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserServey",
+                name: "UserSurvey",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    VoterId = table.Column<int>(nullable: false),
-                    ConsideredId = table.Column<int>(nullable: false),
-                    ServeyId = table.Column<int>(nullable: false),
+                    VoterUserId = table.Column<int>(nullable: false),
+                    ConsideredUserId = table.Column<int>(nullable: false),
+                    SurveyId = table.Column<int>(nullable: false),
                     Point = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserServey", x => x.Id);
+                    table.PrimaryKey("PK_UserSurvey", x => x.Id);
                 });
         }
 
@@ -63,7 +63,7 @@ namespace DataAccess.Migrations
                 name: "User");
 
             migrationBuilder.DropTable(
-                name: "UserServey");
+                name: "UserSurvey");
         }
     }
 }

@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(BotDbContext))]
-    [Migration("20200330100239_migration23")]
-    partial class migration23
+    [Migration("20200327064806_mig1")]
+    partial class mig1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -65,7 +65,7 @@ namespace DataAccess.Migrations
                     b.ToTable("User");
                 });
 
-            modelBuilder.Entity("DataAccess.Models.UserServey", b =>
+            modelBuilder.Entity("DataAccess.Models.UserSurvey", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -78,7 +78,7 @@ namespace DataAccess.Migrations
                     b.Property<int>("Point")
                         .HasColumnType("int");
 
-                    b.Property<int>("ServeyId")
+                    b.Property<int>("SurveyId")
                         .HasColumnType("int");
 
                     b.Property<int>("VoterUserId")
@@ -86,7 +86,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserServey");
+                    b.ToTable("UserSurvey");
                 });
 #pragma warning restore 612, 618
         }
