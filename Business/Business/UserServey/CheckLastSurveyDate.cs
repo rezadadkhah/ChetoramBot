@@ -19,20 +19,20 @@ namespace Business.Business.User
 
         public override void Execute()
         {
-            var userSurvey = Context.UserServey.LastOrDefault(u => u.VoterUserId == voterUserId && u.ConsideredUserId == consideredUserId);
-            if (userSurvey == null)
-            {
-                Result = true;
-                return;
-            }
-            if (userSurvey.SurveyDate > DateTime.Now.AddDays(-1))
-            {
-                Result = false;
-                return;
-            }
+            ////var userSurvey = Context.UserServey.LastOrDefault(u => u.VoterUserId == voterUserId && u.ConsideredUserId == consideredUserId);
+            //if (userSurvey == null)
+            //{
+            //    Result = true;
+            //    return;
+            //}
+            //if (userSurvey.SurveyDate > DateTime.Now.AddDays(-1))
+            //{
+            //    Result = false;
+            //    return;
+            //}
 
-            Result = true;
-            return;
+            //Result = true;
+            //return;
         }
     }
 }

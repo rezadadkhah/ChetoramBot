@@ -2,6 +2,7 @@
 using ChetoramBot.Helpers;
 using DataAccess.Models;
 using System.Threading;
+using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
@@ -28,13 +29,13 @@ namespace ChetoramBot
 
         private static void OnUpdate(object? sender, UpdateEventArgs e)
         {
-            
+
         }
 
         private static void OnMessage(object sender, MessageEventArgs e)
         {
             if (e.Message.Type == MessageType.Text)
-                ProcessText(e); 
+                ProcessText(e);
         }
 
         private static void OnCallbackQuery(object sender, CallbackQueryEventArgs e)
@@ -42,7 +43,7 @@ namespace ChetoramBot
             Statics.ProcessCallbackQuery(e);
 
 
-            
+
         }
 
 
@@ -54,23 +55,10 @@ namespace ChetoramBot
                 Statics.StartClient(e);
                 return;
             }
-            if (e.Message.Text == "لینک نظردهی ناشناس من")
-            {
-                //Statics.GetPrivateLink(e);
-                return;
-            }
-
             if (Statics.CheckIsSurvey(e, out int userId))
             {
-                SendNewSurvey(e, userId);
+                Statics.SendNewSurvey(e, userId);
             }
-        }
-
-        private static async Task GetPrivateLink(UpdateEventArgs e)
-        {
-            GetSurvey getSurvey = new GetSurvey();
-            getSurvey.Run();
-            Statics.CreateAndSendSurveyInlineKeyboard(e, userId, getSurvey.Result);
         }
     }
 }

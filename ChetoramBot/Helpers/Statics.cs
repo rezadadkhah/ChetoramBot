@@ -28,53 +28,24 @@ namespace ChetoramBot.Helpers
             return new InlineKeyboardMarkup(buttons);
         }
 
-        public static IReplyMarkup GetSurveyButtons(MessageEventArgs e, int userId, Survey survey)
+        public static IReplyMarkup GetSurveyButtons(MessageEventArgs e, int consideredUserId, Survey survey)
         {
             if (e == null || survey == null)
                 return null;
             return new InlineKeyboardMarkup(new[]
                         {
-                            InlineKeyboardButton.WithCallbackData("نه اصلا",JsonConvert.SerializeObject(new SurveyVm()
-                            {
-                                VId = e.Message.From.Id,
-                                CId = userId,
-                                SId = survey.Id,
-                                Sn = "نه اصلا",
-                                P = 0
-                            })),
-                            InlineKeyboardButton.WithCallbackData("خیلی کم",JsonConvert.SerializeObject(new SurveyVm()
-                            {
-                                VId = e.Message.From.Id,
-                                CId = userId,
-                                SId = survey.Id,
-                                Sn = "خیلی کم",
-                                P = 25
-                            })),
-                            InlineKeyboardButton.WithCallbackData("متوسط",JsonConvert.SerializeObject(new SurveyVm()
-                            {
-                                VId = e.Message.From.Id,
-                                CId = userId,
-                                SId = survey.Id,
-                                Sn = "متوسط",
-                                P = 50
-                            })),
-                            InlineKeyboardButton.WithCallbackData("آره",JsonConvert.SerializeObject(new SurveyVm()
-                            {
-                                VId = e.Message.From.Id,
-                                CId = userId,
-                                SId = survey.Id,
-                                Sn = "آره",
-                                P = 75
-                            })),
-                            InlineKeyboardButton.WithCallbackData("آره خیلی",JsonConvert.SerializeObject(new SurveyVm()
-                            {
-                                VId = e.Message.From.Id,
-                                CId = userId,
-                                SId = survey.Id,
-                                Sn = "آره خیلی",
-                                P = 100
-                            }))
+                            InlineKeyboardButton.WithCallbackData("نه اصلا",SerializeButtonData(e, consideredUserId, survey, "نه اصلا",0)),
+                            InlineKeyboardButton.WithCallbackData("خیلی کم",SerializeButtonData(e, consideredUserId, survey, "خیلی کم",25)),
+                            InlineKeyboardButton.WithCallbackData("متوسط",SerializeButtonData(e, consideredUserId, survey, "متوسط",50)),
+                            InlineKeyboardButton.WithCallbackData("آره",SerializeButtonData(e, consideredUserId, survey, "آره",75)),
+                            InlineKeyboardButton.WithCallbackData("آره خیلی",SerializeButtonData(e, consideredUserId, survey, "آره خیلی",100)),
+
                         });
+        }
+
+        private static string SerializeButtonData(MessageEventArgs e, int consideredUserId, Survey survey,string surveyName,int point)
+        {
+            return e.Message.From.Id + "_" + consideredUserId + "_" + survey.Id + "_" + surveyName + "_" + point;
         }
 
         public static bool CheckIsSurvey(MessageEventArgs e, out int userId)
@@ -94,7 +65,7 @@ namespace ChetoramBot.Helpers
             insertUserSurvey.Run();
         }
 
-        public static void CreateAndSendSurveyInlineKeyboard(MessageEventArgs e, int userId, IEnumerable<Survey> surveys)
+        public static void CreateAndSendSurveyInlineKeyboard(MessageEventArgs e, int consideredUserId, IEnumerable<Survey> surveys)
         {
             if (surveys == null || Application.BotClient == null || e == null)
                 return;
@@ -103,13 +74,13 @@ namespace ChetoramBot.Helpers
                 Application.BotClient.SendTextMessageAsync(
                     e.Message.Chat.Id,
                     survey.PersianTitle,
-                    replyMarkup: Statics.GetSurveyButtons(e, userId, survey)
+                    replyMarkup: Statics.GetSurveyButtons(e, consideredUserId, survey)
                 ).ConfigureAwait(false);
 
             }
         }
 
-        private static void GetPrivateLink(CallbackQueryEventArgs e)
+        public static void GetPrivateLink(CallbackQueryEventArgs e)
         {
             if (Application.BotClient == null || e == null)
                 return;
@@ -154,40 +125,45 @@ namespace ChetoramBot.Helpers
             switch (e.CallbackQuery.Data)
             {
                 case "MyPL":
-                {
-                    Statics.GetPrivateLink(e);
-                    break;
-                }
-                case "MyReport":
-                {
-                    Statics.GetReport(e);
-                    break;
-                }
-                default:
-                {
-                    SurveyVm surveyVm = JsonConvert.DeserializeObject<SurveyVm>(e.CallbackQuery.Data);
-                    if (Statics.IsSurveyVm(surveyVm))
                     {
-                        return;
+                        Statics.GetPrivateLink(e);
+                        break;
                     }
-                    UserSurvey userSurvey = new UserSurvey()
+                case "MyReport":
                     {
-                        VoterUserId = surveyVm.VId,
-                        ConsideredUserId = surveyVm.CId,
-                        SurveyId = surveyVm.SId,
-                        Point = surveyVm.P,
-                    };
-                    InsertUserSurvey(userSurvey);
-                    Application.BotClient.AnswerCallbackQueryAsync(e.CallbackQuery.Id);
-                    Application.BotClient.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, e.CallbackQuery.Message.Text + " => " + surveyVm.Sn);
-                    break;
-                }
+                        Statics.GetReport(e);
+                        break;
+                    }
+                default:
+                    {
+                        SurveyVm surveyVm = JsonConvert.DeserializeObject<SurveyVm>(e.CallbackQuery.Data);
+                        if (Statics.IsSurveyVm(surveyVm))
+                        {
+                            return;
+                        }
+                        UserSurvey userSurvey = new UserSurvey()
+                        {
+                            VoterUserId = surveyVm.VId,
+                            ConsideredUserId = surveyVm.CId,
+                            SurveyId = surveyVm.SId,
+                            Point = surveyVm.P,
+                        };
+                        InsertUserSurvey(userSurvey);
+                        Application.BotClient.AnswerCallbackQueryAsync(e.CallbackQuery.Id);
+                        Application.BotClient.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, e.CallbackQuery.Message.Text + " => " + surveyVm.Sn);
+                        break;
+                    }
             }
         }
 
         private static void GetReport(CallbackQueryEventArgs e)
         {
             throw new NotImplementedException();
+        }
+
+        public static void SendNewSurvey(MessageEventArgs messageEventArgs, in int userId)
+        {
+            //this.CreateAndSendSurveyInlineKeyboard(messageEventArgs,)
         }
     }
 
