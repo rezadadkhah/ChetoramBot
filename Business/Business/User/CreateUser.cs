@@ -16,11 +16,12 @@ namespace Business.Business.User
         }
         public override void Validate()
         {
-            if (user.UserId.IsNotPositive() || user.UserName.IsNullOrEmptyOrWhitespace())
+            if (user.UserId.IsNotPositive())
                 ReturnInvalidResult(Types.ExceptionTypes.ValidationException);
 
             if (UserExists())
             {
+                Result = true;
                 Continue = false;
                 return;
             }
@@ -29,7 +30,7 @@ namespace Business.Business.User
 
         public override void Execute()
         {
-            Context.User.Add(new DataAccess.Models.User
+            Context.Users.Add(new DataAccess.Models.User
             {
                 UserId = user.UserId,
                 UserName = user.UserName,

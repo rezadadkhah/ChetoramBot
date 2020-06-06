@@ -12,9 +12,9 @@ namespace DataAccess.Models
         public BotDbContext() : base() { }
 
 
-        public virtual DbSet<User> User { get; set; }
-        public virtual DbSet<Survey> Survey { get; set; }
-        public virtual DbSet<UserSurvey> UserSurvey { get; set; }
+        public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<Survey> Surveys { get; set; }
+        public virtual DbSet<UserSurvey> UserSurveys { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

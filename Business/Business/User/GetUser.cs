@@ -31,7 +31,7 @@ namespace Business.Business.User
 
         public override void Execute()
         {
-            Result = Context.User.FirstOrDefault(u => 
+            Result = Context.Users.FirstOrDefault(u => 
             (userId <= 0 || u.UserId == userId) &&
             (string.IsNullOrEmpty(userName) || string.IsNullOrWhiteSpace(userName) || u.UserName == userName) 
             );

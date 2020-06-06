@@ -23,7 +23,7 @@ namespace Business.Business.User
         }
         public override void Execute()
         {
-            Context.UserSurvey.Add(userSurvey);
+            Context.UserSurveys.Add(userSurvey);
             Context.SaveChanges();
             Result = true;
             return;

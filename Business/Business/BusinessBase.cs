@@ -64,7 +64,7 @@ namespace Business.Business
                 this.CreateInvlidResult("Business Is Unsuccessful!");
                 return;
             }
-            catch
+            catch(Exception ex)
             {
                 this.CreateInvlidResult("Operation Failed!");
                 return;

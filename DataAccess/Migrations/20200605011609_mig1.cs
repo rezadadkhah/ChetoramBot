@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace DataAccess.Migrations
 {
@@ -7,7 +8,7 @@ namespace DataAccess.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Survey",
+                name: "Surveys",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
@@ -17,11 +18,11 @@ namespace DataAccess.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Survey", x => x.Id);
+                    table.PrimaryKey("PK_Surveys", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "User",
+                name: "Users",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
@@ -34,11 +35,11 @@ namespace DataAccess.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_User", x => x.Id);
+                    table.PrimaryKey("PK_Users", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserSurvey",
+                name: "UserSurveys",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
@@ -46,24 +47,25 @@ namespace DataAccess.Migrations
                     VoterUserId = table.Column<int>(nullable: false),
                     ConsideredUserId = table.Column<int>(nullable: false),
                     SurveyId = table.Column<int>(nullable: false),
-                    Point = table.Column<int>(nullable: false)
+                    Point = table.Column<int>(nullable: false),
+                    SurveyDate = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserSurvey", x => x.Id);
+                    table.PrimaryKey("PK_UserSurveys", x => x.Id);
                 });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Survey");
+                name: "Surveys");
 
             migrationBuilder.DropTable(
-                name: "User");
+                name: "Users");
 
             migrationBuilder.DropTable(
-                name: "UserSurvey");
+                name: "UserSurveys");
         }
     }
 }

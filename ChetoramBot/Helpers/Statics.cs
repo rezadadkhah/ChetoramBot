@@ -3,10 +3,12 @@ using Business.Business.User;
 using Business.Common.Extentions;
 using DataAccess.Models;
 using System.Collections.Generic;
-using ChetoramBot.ViewModels;
-using Newtonsoft.Json;
+using System.Linq;
+using System.Threading.Tasks;
+using Business.Helpers;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.ReplyMarkups;
+using Telegram.Bot.Types;
 
 namespace ChetoramBot.Helpers
 {
@@ -23,29 +25,49 @@ namespace ChetoramBot.Helpers
             {
                 InlineKeyboardButton.WithCallbackData("دیدن نظرات دیگران در مورد خودم", "MyReport")
             };
+            List<InlineKeyboardButton> thirdRow = new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData("منوی اصلی", "MainMenu")
+            };
             buttons.Add(firstRow);
             buttons.Add(secondRow);
+            buttons.Add(thirdRow);
             return new InlineKeyboardMarkup(buttons);
         }
 
-        public static IReplyMarkup GetSurveyButtons(MessageEventArgs e, int consideredUserId, Survey survey)
+        public static IReplyMarkup GetSurveyButtons(Message message, int consideredUserId, Survey survey)
         {
-            if (e == null || survey == null)
+            if (message == null || survey == null)
                 return null;
             return new InlineKeyboardMarkup(new[]
                         {
-                            InlineKeyboardButton.WithCallbackData("نه اصلا",SerializeButtonData(e, consideredUserId, survey, "نه اصلا",0)),
-                            InlineKeyboardButton.WithCallbackData("خیلی کم",SerializeButtonData(e, consideredUserId, survey, "خیلی کم",25)),
-                            InlineKeyboardButton.WithCallbackData("متوسط",SerializeButtonData(e, consideredUserId, survey, "متوسط",50)),
-                            InlineKeyboardButton.WithCallbackData("آره",SerializeButtonData(e, consideredUserId, survey, "آره",75)),
-                            InlineKeyboardButton.WithCallbackData("آره خیلی",SerializeButtonData(e, consideredUserId, survey, "آره خیلی",100)),
-
+                            new[]
+                            {
+                                InlineKeyboardButton.WithCallbackData("نه اصلا",SerializeSurveyButtonData(message, consideredUserId, survey, "نه اصلا",0)),
+                                InlineKeyboardButton.WithCallbackData("خیلی کم",SerializeSurveyButtonData(message, consideredUserId, survey, "خیلی کم",25)),
+                                InlineKeyboardButton.WithCallbackData("متوسط",SerializeSurveyButtonData(message, consideredUserId, survey, "متوسط",50)),
+                                InlineKeyboardButton.WithCallbackData("آره",SerializeSurveyButtonData(message, consideredUserId, survey, "آره",75)),
+                                InlineKeyboardButton.WithCallbackData("آره خیلی",SerializeSurveyButtonData(message, consideredUserId, survey, "آره خیلی",100))
+                            },
+                            new[]
+                            {
+                            InlineKeyboardButton.WithCallbackData("اینو بیخیال","SkipSurvey"),
+                            InlineKeyboardButton.WithCallbackData("بازگشت","MainMenu")
+                            }
                         });
         }
 
-        private static string SerializeButtonData(MessageEventArgs e, int consideredUserId, Survey survey,string surveyName,int point)
+        internal static void SkipVote(CallbackQueryEventArgs e)
         {
-            return e.Message.From.Id + "_" + consideredUserId + "_" + survey.Id + "_" + surveyName + "_" + point;
+            List<string> data = e.CallbackQuery.Data.Split("_").ToList();
+            Application.BotClient.DeleteMessageAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId);
+            SendNextSurvey(e, int.Parse(data[3]), int.Parse(data[2]));
+        }
+
+
+        private static string SerializeSurveyButtonData(Message message, int consideredUserId, Survey survey, string surveyName, int point)
+        {
+            return "Survey_" + message.From.Id + "_" + consideredUserId + "_" + survey.Id + "_" + surveyName + "_" + point;
         }
 
         public static bool CheckIsSurvey(MessageEventArgs e, out int userId)
@@ -59,25 +81,52 @@ namespace ChetoramBot.Helpers
                             Int32.TryParse(e.Message.Text.Split(" ")[1].Split("-")[1], out userId);
         }
 
-        public static void InsertUserSurvey(UserSurvey userSurvey)
+
+
+        public static async Task CreateAndSendSurveyInlineKeyboard(MessageEventArgs e, int consideredUserId)
         {
-            InsertUserSurvey insertUserSurvey = new InsertUserSurvey(userSurvey);
-            insertUserSurvey.Run();
+            if (Application.BotClient == null || e == null)
+                return;
+            DataAccess.Models.User user = Business.GetUser(consideredUserId);
+            if (null == user)
+            {
+                await Application.BotClient.SendTextMessageAsync(
+                    e.Message.Chat.Id,
+                    "کاربر یافت نشد"
+                ).ConfigureAwait(true);
+                return;
+            }
+            await Application.BotClient.SendTextMessageAsync(
+                e.Message.Chat.Id,
+                string.Format("شما الان در حال اظهار نظر در مورد ویژگی های {0} هستید.میت.نید مطمئن باشید این رای گیری همونطور که برای شما مخفیه برای {0} هم مخفی خواهر بود.", user.FirstName)
+                ).ConfigureAwait(true);
+
+            SendSurvey(Consts.Surveys.First(), e.Message, consideredUserId);
+
         }
 
-        public static void CreateAndSendSurveyInlineKeyboard(MessageEventArgs e, int consideredUserId, IEnumerable<Survey> surveys)
+        private static void SendSurvey(Survey survey, Message message, int consideredUserId)
         {
-            if (surveys == null || Application.BotClient == null || e == null)
+            if (survey == null)
                 return;
-            foreach (Survey survey in surveys)
-            {
-                Application.BotClient.SendTextMessageAsync(
-                    e.Message.Chat.Id,
-                    survey.PersianTitle,
-                    replyMarkup: Statics.GetSurveyButtons(e, consideredUserId, survey)
-                ).ConfigureAwait(false);
+            Application.BotClient.SendTextMessageAsync(
+                message.Chat.Id,
+                survey.PersianTitle,
+                replyMarkup: Statics.GetSurveyButtons(message, consideredUserId, survey)
+            ).ConfigureAwait(false);
+            SendSurveyFooterMessage(message);
+        }
 
-            }
+        private static void SendSurveyFooterMessage(Message message)
+        {
+            Application.BotClient.SendTextMessageAsync(
+                message.Chat.Id,
+                " ",
+                replyMarkup: new InlineKeyboardMarkup(new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("بازگشت", "MainMenu")
+                })
+            ).ConfigureAwait(false);
         }
 
         public static void GetPrivateLink(CallbackQueryEventArgs e)
@@ -86,84 +135,107 @@ namespace ChetoramBot.Helpers
                 return;
             Application.BotClient.SendTextMessageAsync(
                 e.CallbackQuery.Message.Chat.Id,
-                Messages.BotURL + "PL-" + e.CallbackQuery.Message.From.Id
+                Messages.BotURL + "PL-" + e.CallbackQuery.From.Id
             ).ConfigureAwait(false);
         }
 
-        public static void StartClient(MessageEventArgs e)
+        public static void StartClient(Message message)
         {
-            if (Application.BotClient == null || e == null)
+            if (Application.BotClient == null || message == null)
                 return;
+            Telegram.Bot.Types.User user = message.From;
+            if (!Business.CreateUser(new DataAccess.Models.User
+            {
+                UserId = user.Id,
+                FirstName = user.FirstName,
+                lastName = user.LastName
+            }))
+                return;
+
+            GetMainMenu(message);
+
+        }
+
+        public static void GetMainMenu(Message message)
+        {
+            Application.BotClient.SendTextMessageAsync(
+                message.Chat.Id,
+                Messages.StartClient,
+                replyMarkup: Statics.GetMainMenu()
+            ).ConfigureAwait(false);
+        }
+
+        public static void GetReport(CallbackQueryEventArgs e)
+        {
+            Business.GetUserSurveySummery(e.CallbackQuery.From.Id);
+        }
+
+        public static void SendNewSurvey(MessageEventArgs e, in int userId)
+        {
             Telegram.Bot.Types.User user = e.Message.From;
-            CreateUser createUser = new CreateUser(new User
+            CreateUser createUser = new CreateUser(new DataAccess.Models.User
             {
                 UserId = user.Id,
                 FirstName = user.FirstName,
                 lastName = user.LastName
             });
             createUser.Run();
-            Application.BotClient.SendTextMessageAsync(
-                e.Message.Chat.Id,
-                Messages.StartClient,
-                replyMarkup: Statics.GetMainMenu()
-            ).ConfigureAwait(false);
+            CreateAndSendSurveyInlineKeyboard(e, userId);
         }
 
-        public static bool IsSurveyVm(SurveyVm surveyVm)
+        public static void SetVote(CallbackQueryEventArgs e)
         {
-            return surveyVm != null &&
-                   surveyVm.CId.IsPositive() &&
-                   surveyVm.VId.IsPositive() &&
-                   surveyVm.SId.IsPositive() &&
-                   surveyVm.P.IsPositive() &&
-                   !surveyVm.Sn.IsNullOrEmptyOrWhitespace();
-        }
-
-
-        public static void ProcessCallbackQuery(CallbackQueryEventArgs e)
-        {
-            switch (e.CallbackQuery.Data)
+            List<string> data = e.CallbackQuery.Data.Split("_").ToList();
+            UserSurvey userSurvey = new UserSurvey
             {
-                case "MyPL":
-                    {
-                        Statics.GetPrivateLink(e);
-                        break;
-                    }
-                case "MyReport":
-                    {
-                        Statics.GetReport(e);
-                        break;
-                    }
-                default:
-                    {
-                        SurveyVm surveyVm = JsonConvert.DeserializeObject<SurveyVm>(e.CallbackQuery.Data);
-                        if (Statics.IsSurveyVm(surveyVm))
-                        {
-                            return;
-                        }
-                        UserSurvey userSurvey = new UserSurvey()
-                        {
-                            VoterUserId = surveyVm.VId,
-                            ConsideredUserId = surveyVm.CId,
-                            SurveyId = surveyVm.SId,
-                            Point = surveyVm.P,
-                        };
-                        InsertUserSurvey(userSurvey);
-                        Application.BotClient.AnswerCallbackQueryAsync(e.CallbackQuery.Id);
-                        Application.BotClient.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, e.CallbackQuery.Message.Text + " => " + surveyVm.Sn);
-                        break;
-                    }
+                VoterUserId = e.CallbackQuery.From.Id,
+                ConsideredUserId = int.Parse(data[2]),
+                SurveyId = int.Parse(data[3]),
+                Point = int.Parse(data[5]),
+                SurveyDate = DateTime.Now
+            };
+
+            if (!Business.InsertUserSurvey(userSurvey)) return;
+            Application.BotClient.DeleteMessageAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId);
+            SendNextSurvey(e, userSurvey.SurveyId, userSurvey.ConsideredUserId);
+        }
+
+        private static async Task SendNextSurvey(CallbackQueryEventArgs e, int surveyId, int consideredUserId)
+        {
+            if (Consts.Surveys.Last().Id == surveyId)
+            {
+                await SurveyFinished(e.CallbackQuery.Message);
+                return;
             }
+            SendSurvey(GetNextSurvey(surveyId), e.CallbackQuery.Message, consideredUserId);
         }
 
-        private static void GetReport(CallbackQueryEventArgs e)
+        private static async Task SurveyFinished(Message message)
         {
-            throw new NotImplementedException();
+            await Application.BotClient.SendTextMessageAsync(
+                message.Chat.Id,
+                "نظرسنجی به پابان رسید.ازتون ممنونیم ",
+                replyMarkup: new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData("بازگشت","MainMenu")
+                    }
+                })
+            ).ConfigureAwait(true);
         }
 
-        public static void SendNewSurvey(MessageEventArgs messageEventArgs, in int userId)
+        private static Survey GetNextSurvey(int surveyId)
         {
-            //this.CreateAndSendSurveyInlineKeyboard(messageEventArgs,)
+            for (int i = 0; i < Consts.Surveys.Count; i++)
+            {
+                if (Consts.Surveys[i].Id != surveyId)
+                {
+                    continue;
+                }
+                return i == Consts.Surveys.Count - 1 ? null : Consts.Surveys[i + 1];
+            }
+            return null;
         }
     }
 

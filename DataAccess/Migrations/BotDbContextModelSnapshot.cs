@@ -34,7 +34,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Survey");
+                    b.ToTable("Surveys");
                 });
 
             modelBuilder.Entity("DataAccess.Models.User", b =>
@@ -61,7 +61,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("User");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("DataAccess.Models.UserSurvey", b =>
@@ -77,18 +77,18 @@ namespace DataAccess.Migrations
                     b.Property<int>("Point")
                         .HasColumnType("int");
 
-                    b.Property<int>("SurveyId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("SurveyDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("SurveyId")
+                        .HasColumnType("int");
 
                     b.Property<int>("VoterUserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserSurvey");
+                    b.ToTable("UserSurveys");
                 });
 #pragma warning restore 612, 618
         }

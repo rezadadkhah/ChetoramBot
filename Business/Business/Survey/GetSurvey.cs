@@ -8,7 +8,7 @@ namespace Business.Business.Survey
     
         public override void Execute()
         {
-            Result = Context.Survey.ToList();
+            Result = Context.Surveys.ToList();
             return;
         }
     }
