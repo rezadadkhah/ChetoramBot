@@ -9,6 +9,7 @@ using Business.Helpers;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot.Types;
+using Business.Models;
 
 namespace ChetoramBot.Helpers
 {
@@ -35,7 +36,7 @@ namespace ChetoramBot.Helpers
             return new InlineKeyboardMarkup(buttons);
         }
 
-        public static IReplyMarkup GetSurveyButtons(Message message, int consideredUserId, Survey survey)
+        public static IReplyMarkup GetSurveyButtons(Message message, int consideredUserId, DataAccess.Models.Survey survey)
         {
             if (message == null || survey == null)
                 return null;
@@ -65,7 +66,7 @@ namespace ChetoramBot.Helpers
         }
 
 
-        private static string SerializeSurveyButtonData(Message message, int consideredUserId, Survey survey, string surveyName, int point)
+        private static string SerializeSurveyButtonData(Message message, int consideredUserId, DataAccess.Models.Survey survey, string surveyName, int point)
         {
             return "Survey_" + message.From.Id + "_" + consideredUserId + "_" + survey.Id + "_" + surveyName + "_" + point;
         }
@@ -98,14 +99,14 @@ namespace ChetoramBot.Helpers
             }
             await Application.BotClient.SendTextMessageAsync(
                 e.Message.Chat.Id,
-                string.Format("شما الان در حال اظهار نظر در مورد ویژگی های {0} هستید.میت.نید مطمئن باشید این رای گیری همونطور که برای شما مخفیه برای {0} هم مخفی خواهر بود.", user.FirstName)
+                string.Format("شما الان در حال اظهار نظر در مورد ویژگی های {0} هستید.میتونید مطمئن باشید این رای گیری همونطور که برای شما مخفیه برای {0} هم مخفی خواهد بود.", user.FirstName)
                 ).ConfigureAwait(true);
 
             SendSurvey(Consts.Surveys.First(), e.Message, consideredUserId);
 
         }
 
-        private static void SendSurvey(Survey survey, Message message, int consideredUserId)
+        private static void SendSurvey(DataAccess.Models.Survey survey, Message message, int consideredUserId)
         {
             if (survey == null)
                 return;
@@ -167,7 +168,39 @@ namespace ChetoramBot.Helpers
 
         public static void GetReport(CallbackQueryEventArgs e)
         {
-            Business.GetUserSurveySummery(e.CallbackQuery.From.Id);
+            List<SurveySummary> result = Business.GetUserSurveySummery(e.CallbackQuery.From.Id);
+            if(result == null || result.Count == 0)
+            {
+                Application.BotClient.SendTextMessageAsync(
+                e.CallbackQuery.Message.Chat.Id,
+                string.Format("تا الان هیچ نظری در مورد شما داده نشده ..."),
+                replyMarkup: new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData("بازگشت","MainMenu")
+                    }
+                })
+                ).ConfigureAwait(true);
+                return;
+            }
+            string message = " نظرات ثبت شده برای شماایناس :" + System.Environment.NewLine;
+            foreach (SurveySummary summery in result)
+            {
+                message += summery.SurveyPersianName + " = " + summery.Point + "% با " + summery.SurveyCount + " رای" + System.Environment.NewLine;
+            }
+            Application.BotClient.SendTextMessageAsync(
+                e.CallbackQuery.Message.Chat.Id,
+                string.Format(message),
+                replyMarkup: new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData("بازگشت","MainMenu")
+                    }
+                })
+                ).ConfigureAwait(true);
+                return;
         }
 
         public static void SendNewSurvey(MessageEventArgs e, in int userId)
@@ -225,7 +258,7 @@ namespace ChetoramBot.Helpers
             ).ConfigureAwait(true);
         }
 
-        private static Survey GetNextSurvey(int surveyId)
+        private static DataAccess.Models.Survey GetNextSurvey(int surveyId)
         {
             for (int i = 0; i < Consts.Surveys.Count; i++)
             {
