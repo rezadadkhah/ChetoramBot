@@ -20,15 +20,15 @@ namespace ChetoramBot.Helpers
             List<List<InlineKeyboardButton>> buttons = new List<List<InlineKeyboardButton>>();
             List<InlineKeyboardButton> firstRow = new List<InlineKeyboardButton>
             {
-                InlineKeyboardButton.WithCallbackData("لینک نظردهی ناشناس من", "MyPL")
+                InlineKeyboardButton.WithCallbackData(StaticMessages.MyPrivateLink, "MyPL")
             };
             List<InlineKeyboardButton> secondRow = new List<InlineKeyboardButton>
             {
-                InlineKeyboardButton.WithCallbackData("دیدن نظرات دیگران در مورد خودم", "MyReport")
+                InlineKeyboardButton.WithCallbackData(StaticMessages.MyReport, "MyReport")
             };
             List<InlineKeyboardButton> thirdRow = new List<InlineKeyboardButton>
             {
-                InlineKeyboardButton.WithCallbackData("منوی اصلی", "MainMenu")
+                InlineKeyboardButton.WithCallbackData(StaticMessages.MainMenu, "MainMenu")
             };
             buttons.Add(firstRow);
             buttons.Add(secondRow);
@@ -44,11 +44,11 @@ namespace ChetoramBot.Helpers
                         {
                             new[]
                             {
-                                InlineKeyboardButton.WithCallbackData("نه اصلا",SerializeSurveyButtonData(message, consideredUserId, survey, "نه اصلا",0)),
-                                InlineKeyboardButton.WithCallbackData("خیلی کم",SerializeSurveyButtonData(message, consideredUserId, survey, "خیلی کم",25)),
-                                InlineKeyboardButton.WithCallbackData("متوسط",SerializeSurveyButtonData(message, consideredUserId, survey, "متوسط",50)),
-                                InlineKeyboardButton.WithCallbackData("آره",SerializeSurveyButtonData(message, consideredUserId, survey, "آره",75)),
-                                InlineKeyboardButton.WithCallbackData("آره خیلی",SerializeSurveyButtonData(message, consideredUserId, survey, "آره خیلی",100))
+                                InlineKeyboardButton.WithCallbackData(StaticMessages.Never,SerializeSurveyButtonData(message, consideredUserId, survey, StaticMessages.Never,0)),
+                                InlineKeyboardButton.WithCallbackData(StaticMessages.Little,SerializeSurveyButtonData(message, consideredUserId, survey, StaticMessages.Little,25)),
+                                InlineKeyboardButton.WithCallbackData(StaticMessages.Medium,SerializeSurveyButtonData(message, consideredUserId, survey, StaticMessages.Medium,50)),
+                                InlineKeyboardButton.WithCallbackData(StaticMessages.AlmostTooMuch,SerializeSurveyButtonData(message, consideredUserId, survey, StaticMessages.AlmostTooMuch,75)),
+                                InlineKeyboardButton.WithCallbackData(StaticMessages.,SerializeSurveyButtonData(message, consideredUserId, survey, "آره خیلی",100))
                             },
                             new[]
                             {
