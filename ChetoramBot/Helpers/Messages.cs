@@ -14,5 +14,7 @@ namespace ChetoramBot.Helpers
         public const string Medium = "متوسط";
         public const string AlmostTooMuch = "تقریبا زیاد";
         public const string Certainly = "قطعا";
+        public const string SkipThis = "اینو بیخیال";
+        public const string Return = "بازگشت";
     }
 }

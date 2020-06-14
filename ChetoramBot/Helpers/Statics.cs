@@ -48,12 +48,12 @@ namespace ChetoramBot.Helpers
                                 InlineKeyboardButton.WithCallbackData(StaticMessages.Little,SerializeSurveyButtonData(message, consideredUserId, survey, StaticMessages.Little,25)),
                                 InlineKeyboardButton.WithCallbackData(StaticMessages.Medium,SerializeSurveyButtonData(message, consideredUserId, survey, StaticMessages.Medium,50)),
                                 InlineKeyboardButton.WithCallbackData(StaticMessages.AlmostTooMuch,SerializeSurveyButtonData(message, consideredUserId, survey, StaticMessages.AlmostTooMuch,75)),
-                                InlineKeyboardButton.WithCallbackData(StaticMessages.,SerializeSurveyButtonData(message, consideredUserId, survey, "آره خیلی",100))
+                                InlineKeyboardButton.WithCallbackData(StaticMessages.Certainly,SerializeSurveyButtonData(message, consideredUserId, survey, StaticMessages.Certainly,100))
                             },
                             new[]
                             {
-                            InlineKeyboardButton.WithCallbackData("اینو بیخیال","SkipSurvey"),
-                            InlineKeyboardButton.WithCallbackData("بازگشت","MainMenu")
+                                InlineKeyboardButton.WithCallbackData(StaticMessages.SkipThis,"SkipSurvey"),
+                                InlineKeyboardButton.WithCallbackData(StaticMessages.Return,"MainMenu")
                             }
                         });
         }
@@ -169,7 +169,7 @@ namespace ChetoramBot.Helpers
         public static void GetReport(CallbackQueryEventArgs e)
         {
             List<SurveySummary> result = Business.GetUserSurveySummery(e.CallbackQuery.From.Id);
-            if(result == null || result.Count == 0)
+            if (result == null || result.Count == 0)
             {
                 Application.BotClient.SendTextMessageAsync(
                 e.CallbackQuery.Message.Chat.Id,
@@ -200,7 +200,7 @@ namespace ChetoramBot.Helpers
                     }
                 })
                 ).ConfigureAwait(true);
-                return;
+            return;
         }
 
         public static void SendNewSurvey(MessageEventArgs e, in int userId)
