@@ -1,8 +1,11 @@
 ﻿using ChetoramBot.Helpers;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
+using Telegram.Bot.Extensions.Polling;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace ChetoramBot
@@ -19,71 +22,91 @@ namespace ChetoramBot
         private static void Initialize()
         {
             BotClient = new TelegramBotClient("1010447647:AAErBW8AbSk5y5V_XhQ2i1djhKB6dDT9Epo");
-            BotClient.OnMessage += OnMessage;
-            BotClient.OnCallbackQuery += OnCallbackQuery;
-            BotClient.StartReceiving();
+            CancellationTokenSource cts = new CancellationTokenSource();
+            BotClient.StartReceiving(
+               new DefaultUpdateHandler(HandleUpdateAsync, HandleErrorAsync),
+               cts.Token
+            );
         }
-
-        private static void OnMessage(object sender, MessageEventArgs e)
+        public static async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
         {
-            if (e.Message.Type == MessageType.Text)
-                ProcessText(e);
+            var handler = update.Type switch
+            {
+                UpdateType.Message => BotOnMessageReceived(update.Message),
+                UpdateType.EditedMessage => BotOnMessageReceived(update.Message),
+                UpdateType.CallbackQuery => BotOnCallbackQueryReceived(update.CallbackQuery),
+                _ => throw new Exception()
+            };
+
+            try
+            {
+                await handler.ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                await HandleErrorAsync(exception, cancellationToken).ConfigureAwait(false);
+            }
         }
-
-        private static void OnCallbackQuery(object sender, CallbackQueryEventArgs e)
+        private static async Task BotOnMessageReceived(Message message)
         {
-            ProcessCallbackQuery(e);
+            if (message.Type == MessageType.Text)
+                _ = ProcessText(message);
         }
-
-        public static void ProcessCallbackQuery(CallbackQueryEventArgs e)
+        public static async Task HandleErrorAsync(Exception exception, CancellationToken cancellationToken)
         {
-            if (null == e) return;
-            string startsWith = e.CallbackQuery.Data.Split("_")[0];
+        }
+        
+
+        private static async Task BotOnCallbackQueryReceived(CallbackQuery callbackQuery)
+        {
+            if (null == callbackQuery) return;
+            string startsWith = callbackQuery.Data.Split("_")[0];
             switch (startsWith)
             {
                 case "MyPL":
-                {
-                    Statics.GetPrivateLink(e);
-                    break;
-                }
-                case "MyReport":
-                {
-                    Statics.GetReport(e);
-                    break;
-                }
-                case "MainMenu":
-                {
-                    Statics.GetMainMenu(e.CallbackQuery.Message);
-                    break;
-                }
-                case "Survey":
-                {
-                        Statics.SetVote(e);
+                    {
+                        Statics.GetPrivateLink(callbackQuery);
                         break;
-                }
+                    }
+                case "MyReport":
+                    {
+                        Statics.GetReport(callbackQuery);
+                        break;
+                    }
+                case "MainMenu":
+                    {
+                        Statics.GetMainMenu(callbackQuery.Message);
+                        break;
+                    }
+                case "Survey":
+                    {
+                        Statics.SetVote(callbackQuery);
+                        break;
+                    }
                 case "SkipSurvey":
-                {
-                    Statics.SkipVote(e);
-                    break;
-                }
+                    {
+                        Statics.SkipVote(callbackQuery);
+                        break;
+                    }
                 default:
-                {
-                    Statics.SetVote(e);
-                    break;
-                }
+                    {
+                        Statics.SetVote(callbackQuery);
+                        break;
+                    }
             }
         }
 
-        private static void ProcessText(MessageEventArgs e)
+        private static async Task ProcessText(Message message)
         {
-            if (e.Message.Text == "/start")
+            if (message.Text == "/start")
             {
-                Statics.StartClient(e.Message);
+                Statics.StartClient(message);
                 return;
             }
-            if (Statics.CheckIsSurvey(e, out int userId))
+            int userId = 0;
+            if (Statics.CheckIsSurvey(message, userId))
             {
-                Statics.SendNewSurvey(e, userId);
+                Statics.SendNewSurvey(message, userId);
             }
         }
     }

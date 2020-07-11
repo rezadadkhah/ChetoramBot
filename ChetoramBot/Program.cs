@@ -4,7 +4,7 @@ namespace ChetoramBot
 {
     class Program
     {
-        static void Main(string[] args)
+        static async void Main(string[] args)
         {
             Application.Run();
         }

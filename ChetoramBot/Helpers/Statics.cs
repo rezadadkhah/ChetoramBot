@@ -58,11 +58,11 @@ namespace ChetoramBot.Helpers
                         });
         }
 
-        internal static void SkipVote(CallbackQueryEventArgs e)
+        internal static void SkipVote(CallbackQuery callbackQuery)
         {
-            List<string> data = e.CallbackQuery.Data.Split("_").ToList();
-            Application.BotClient.DeleteMessageAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId);
-            SendNextSurvey(e, int.Parse(data[3]), int.Parse(data[2]));
+            List<string> data = callbackQuery.Data.Split("_").ToList();
+            Application.BotClient.DeleteMessageAsync(callbackQuery.Message.Chat.Id, callbackQuery.Message.MessageId);
+            SendNextSurvey(callbackQuery, int.Parse(data[3]), int.Parse(data[2]));
         }
 
 
@@ -71,38 +71,35 @@ namespace ChetoramBot.Helpers
             return "Survey_" + message.From.Id + "_" + consideredUserId + "_" + survey.Id + "_" + surveyName + "_" + point;
         }
 
-        public static bool CheckIsSurvey(MessageEventArgs e, out int userId)
+        public static bool CheckIsSurvey(Message message, int userId) =>
+                            message.Text.StartsWith("/start") &&
+                            message.Text.Split(" ")[0] == "/start" &&
+                            !message.Text.Split(" ")[1].IsNullOrEmptyOrWhitespace() &&
+                            message.Text.Split(" ")[1].Split("-")[0] == "PL" &&
+                            !message.Text.Split(" ")[1].Split("-")[1].IsNullOrEmptyOrWhitespace() &&
+                            Int32.TryParse(message.Text.Split(" ")[1].Split("-")[1], out userId);
+
+
+
+        public static void CreateAndSendSurveyInlineKeyboard(Message message, int consideredUserId)
         {
-            userId = 0;
-            return e.Message.Text.StartsWith("/start") &&
-                            e.Message.Text.Split(" ")[0] == "/start" &&
-                            !e.Message.Text.Split(" ")[1].IsNullOrEmptyOrWhitespace() &&
-                            e.Message.Text.Split(" ")[1].Split("-")[0] == "PL" &&
-                            !e.Message.Text.Split(" ")[1].Split("-")[1].IsNullOrEmptyOrWhitespace() &&
-                            Int32.TryParse(e.Message.Text.Split(" ")[1].Split("-")[1], out userId);
-        }
-
-
-
-        public static async Task CreateAndSendSurveyInlineKeyboard(MessageEventArgs e, int consideredUserId)
-        {
-            if (Application.BotClient == null || e == null)
+            if (Application.BotClient == null || message == null)
                 return;
             DataAccess.Models.User user = Business.GetUser(consideredUserId);
             if (null == user)
             {
-                await Application.BotClient.SendTextMessageAsync(
-                    e.Message.Chat.Id,
+                Application.BotClient.SendTextMessageAsync(
+                    message.Chat.Id,
                     "کاربر یافت نشد"
-                ).ConfigureAwait(true);
+                );
                 return;
             }
-            await Application.BotClient.SendTextMessageAsync(
-                e.Message.Chat.Id,
+            Application.BotClient.SendTextMessageAsync(
+                message.Chat.Id,
                 string.Format("شما الان در حال اظهار نظر در مورد ویژگی های {0} هستید.میتونید مطمئن باشید این رای گیری همونطور که برای شما مخفیه برای {0} هم مخفی خواهد بود.", user.FirstName)
-                ).ConfigureAwait(true);
+                );
 
-            SendSurvey(Consts.Surveys.First(), e.Message, consideredUserId);
+            SendSurvey(Consts.Surveys.First(), message, consideredUserId);
 
         }
 
@@ -130,16 +127,16 @@ namespace ChetoramBot.Helpers
             ).ConfigureAwait(false);
         }
 
-        public static void GetPrivateLink(CallbackQueryEventArgs e)
+        public static void GetPrivateLink(CallbackQuery callbackQuery)
         {
-            if (Application.BotClient == null || e == null)
+            if (Application.BotClient == null || callbackQuery == null)
                 return;
             Application.BotClient.SendTextMessageAsync(
-                e.CallbackQuery.Message.Chat.Id,
-                Messages.BotURL + "PL-" + e.CallbackQuery.From.Id
-            ).ConfigureAwait(false);
+                callbackQuery.Message.Chat.Id,
+                Messages.BotURL + "PL-" + callbackQuery.From.Id
+            );
         }
-
+                      
         public static void StartClient(Message message)
         {
             if (Application.BotClient == null || message == null)
@@ -156,23 +153,23 @@ namespace ChetoramBot.Helpers
             GetMainMenu(message);
 
         }
-
+                      
         public static void GetMainMenu(Message message)
         {
             Application.BotClient.SendTextMessageAsync(
                 message.Chat.Id,
                 Messages.StartClient,
                 replyMarkup: Statics.GetMainMenu()
-            ).ConfigureAwait(false);
+            );
         }
-
-        public static void GetReport(CallbackQueryEventArgs e)
+                      
+        public static void GetReport(CallbackQuery callbackQuery)
         {
-            List<SurveySummary> result = Business.GetUserSurveySummery(e.CallbackQuery.From.Id);
+            List<SurveySummary> result = Business.GetUserSurveySummery(callbackQuery.From.Id);
             if (result == null || result.Count == 0)
             {
                 Application.BotClient.SendTextMessageAsync(
-                e.CallbackQuery.Message.Chat.Id,
+                callbackQuery.Message.Chat.Id,
                 string.Format("تا الان هیچ نظری در مورد شما داده نشده ..."),
                 replyMarkup: new InlineKeyboardMarkup(new[]
                 {
@@ -181,7 +178,7 @@ namespace ChetoramBot.Helpers
                         InlineKeyboardButton.WithCallbackData("بازگشت","MainMenu")
                     }
                 })
-                ).ConfigureAwait(true);
+                );
                 return;
             }
             string message = " نظرات ثبت شده برای شماایناس :" + System.Environment.NewLine;
@@ -190,7 +187,7 @@ namespace ChetoramBot.Helpers
                 message += summery.SurveyPersianName + " = " + summery.Point + "% با " + summery.SurveyCount + " رای" + System.Environment.NewLine;
             }
             Application.BotClient.SendTextMessageAsync(
-                e.CallbackQuery.Message.Chat.Id,
+               callbackQuery.Message.Chat.Id,
                 string.Format(message),
                 replyMarkup: new InlineKeyboardMarkup(new[]
                 {
@@ -199,29 +196,41 @@ namespace ChetoramBot.Helpers
                         InlineKeyboardButton.WithCallbackData("بازگشت","MainMenu")
                     }
                 })
-                ).ConfigureAwait(true);
+                );
             return;
         }
-
-        public static void SendNewSurvey(MessageEventArgs e, in int userId)
+                      
+        public static void SendNewSurvey(Message message,int userId)
         {
-            Telegram.Bot.Types.User user = e.Message.From;
-            CreateUser createUser = new CreateUser(new DataAccess.Models.User
+            CheckNull(message);
+            Telegram.Bot.Types.User user = message.From;
+            CreateUser createUser = new CreateUser(CreateUserModel(user));
+            createUser.Run();
+            CreateAndSendSurveyInlineKeyboard(message, userId);
+        }
+
+        private static DataAccess.Models.User CreateUserModel(Telegram.Bot.Types.User user)
+        {
+            return new DataAccess.Models.User
             {
                 UserId = user.Id,
                 FirstName = user.FirstName,
                 lastName = user.LastName
-            });
-            createUser.Run();
-            CreateAndSendSurveyInlineKeyboard(e, userId);
+            };
         }
 
-        public static void SetVote(CallbackQueryEventArgs e)
+        private static void CheckNull(object obj)
         {
-            List<string> data = e.CallbackQuery.Data.Split("_").ToList();
+            if(obj == null)
+                throw new NullReferenceException();
+        }
+
+        public static void SetVote(CallbackQuery callbackQuery)
+        {
+            List<string> data = callbackQuery.Data.Split("_").ToList();
             UserSurvey userSurvey = new UserSurvey
             {
-                VoterUserId = e.CallbackQuery.From.Id,
+                VoterUserId = callbackQuery.From.Id,
                 ConsideredUserId = int.Parse(data[2]),
                 SurveyId = int.Parse(data[3]),
                 Point = int.Parse(data[5]),
@@ -229,23 +238,23 @@ namespace ChetoramBot.Helpers
             };
 
             if (!Business.InsertUserSurvey(userSurvey)) return;
-            Application.BotClient.DeleteMessageAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId);
-            SendNextSurvey(e, userSurvey.SurveyId, userSurvey.ConsideredUserId);
+            Application.BotClient.DeleteMessageAsync(callbackQuery.Message.Chat.Id, callbackQuery.Message.MessageId);
+            SendNextSurvey(callbackQuery, userSurvey.SurveyId, userSurvey.ConsideredUserId);
         }
 
-        private static async Task SendNextSurvey(CallbackQueryEventArgs e, int surveyId, int consideredUserId)
+        private static void SendNextSurvey(CallbackQuery callbackQuery, int surveyId, int consideredUserId)
         {
             if (Consts.Surveys.Last().Id == surveyId)
             {
-                await SurveyFinished(e.CallbackQuery.Message);
+                SurveyFinished(callbackQuery.Message);
                 return;
             }
-            SendSurvey(GetNextSurvey(surveyId), e.CallbackQuery.Message, consideredUserId);
+            SendSurvey(GetNextSurvey(surveyId), callbackQuery.Message, consideredUserId);
         }
 
-        private static async Task SurveyFinished(Message message)
+        private static void SurveyFinished(Message message)
         {
-            await Application.BotClient.SendTextMessageAsync(
+            Application.BotClient.SendTextMessageAsync(
                 message.Chat.Id,
                 "نظرسنجی به پابان رسید.ازتون ممنونیم ",
                 replyMarkup: new InlineKeyboardMarkup(new[]
@@ -255,7 +264,7 @@ namespace ChetoramBot.Helpers
                         InlineKeyboardButton.WithCallbackData("بازگشت","MainMenu")
                     }
                 })
-            ).ConfigureAwait(true);
+            );
         }
 
         private static DataAccess.Models.Survey GetNextSurvey(int surveyId)
